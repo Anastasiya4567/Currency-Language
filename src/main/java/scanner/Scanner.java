@@ -1,4 +1,4 @@
-package scanner.src;
+package scanner;
 
 import java.io.FileReader;
 import java.io.IOException;

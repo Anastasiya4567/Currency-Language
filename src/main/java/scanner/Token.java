@@ -1,4 +1,4 @@
-package scanner.src;
+package scanner;
 
 public class Token {
     private TokenType tokenType;
