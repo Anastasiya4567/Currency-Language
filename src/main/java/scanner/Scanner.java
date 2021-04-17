@@ -1,10 +1,10 @@
 package scanner;
 
-import java.io.FileReader;
+import java.io.Reader;
 import java.io.IOException;
 
 public class Scanner {
-    private FileReader fileReader;
+    private Reader fileReader;
     private Token currentToken;
     private int character;
 
@@ -12,7 +12,7 @@ public class Scanner {
         return currentToken;
     }
 
-    public Scanner (FileReader fileReader) {
+    public Scanner (Reader fileReader) {
         this.fileReader = fileReader;
 
         try {
@@ -145,7 +145,7 @@ public class Scanner {
                     this.currentToken = new Token(TokenType.CLOSE_SQUARE_BRACKET, "]");
                     break;
                 case '=':
-                    this.currentToken = new Token(TokenType.EQUALS, "=");
+                    this.currentToken = new Token(TokenType.IS, "=");
                     break;
                 case ',':
                     this.currentToken = new Token(TokenType.COMMA, ",");

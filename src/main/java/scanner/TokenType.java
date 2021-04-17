@@ -8,7 +8,7 @@ public enum TokenType {
     CLOSE_SQUARE_BRACKET,
     OPEN_CURLY_BRACKET,
     CLOSE_CURLY_BRACKET,
-    EQUALS,
+    IS,
     NOT_EQUALS,
     COMMA,
     SEMI_COLON,
