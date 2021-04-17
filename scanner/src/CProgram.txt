@@ -1,5 +1,4 @@
-
-import currencies.json;
+import currencies.json |&|a;
 
 Currency exchange(Currency cur, String val) {
 	return EUR(cur);

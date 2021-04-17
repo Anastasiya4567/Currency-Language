@@ -1,4 +1,4 @@
-package Scanner.src;
+package scanner.src;
 
 public enum TokenType {
     UNKNOWN,
@@ -15,7 +15,19 @@ public enum TokenType {
     QUATATION_MARKS,
     EXCLAMATION_MARK,
     IDENTIFIER,
-    END_OF_FILE
+    END_OF_FILE,
+    POINT,
+    LESS_THAN,
+    MORE_THAN,
+    PLUS,
+    MINUS,
+    MULTIPLY,
+    DIVIDE,
+    NUMBER,
+    BIG_INTEGER,
+    AND,
+    OR
+
 
 
 

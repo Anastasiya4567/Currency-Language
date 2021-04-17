@@ -1,6 +1,4 @@
-package Scanner.src;
-
-import Scanner.Scanner;
+package scanner.src;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -11,7 +9,7 @@ public class Main {
         FileReader fileReader;
 
         try {
-            fileReader = new FileReader("Scanner/src/CProgram.txt");
+            fileReader = new FileReader("scanner/src/CProgram.txt");
 
             Scanner scanner = new Scanner(fileReader);
             while(scanner.getCurrentToken().getTokenType() != TokenType.END_OF_FILE) {
@@ -21,12 +19,5 @@ public class Main {
         } catch (FileNotFoundException ex) {
             System.out.println("No file found");
         }
-
-
-
-
-
-
-
     }
 }

@@ -1,13 +1,12 @@
-package Scanner.src;
+package scanner.src;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class Scanner {
     private FileReader fileReader;
     private Token currentToken;
-    private char character;
+    private int character;
 
     public Token getCurrentToken() {
         return currentToken;
@@ -15,83 +14,185 @@ public class Scanner {
 
     public Scanner (FileReader fileReader) {
         this.fileReader = fileReader;
+
+        try {
+            this.character = this.fileReader.read();
+        } catch (IOException e) {}
+
         next();
     }
-    private void addToken(ArrayList<Token> tokens, TokenType type, String value) {
-        currentToken = new Token(type, value);
-    }
 
-    public void next() {
-        ArrayList<TokenType> tokens = new ArrayList<TokenType>();
+    public void next(){//każdy while sprawdzanie maxymalnej długości
         try {
-            int i;
-            i = fileReader.read();
-            if (!Character.isWhitespace((char)i)) {
+            while (Character.isWhitespace((char)this.character)) {
+                this.character = this.fileReader.read();
 
             }
 
-            if (i==-1) {
-                this.currentToken = new Token(TokenType.END_OF_FILE, "-1");
+            if (this.character==-1) {
+                this.currentToken = new Token(TokenType.END_OF_FILE, "");
+                return;
             }
 
+            if (Character.isLetter((char)this.character)) {
+                String identifier = "";
+                identifier += (char)this.character;
+                while ((this.character=this.fileReader.read()) != -1 && (Character.isLetter((char)this.character) || Character.isDigit((char)this.character) || (char)this.character == '_')) {
+                    identifier += (char)character;
+                }
+                this.currentToken = new Token(TokenType.IDENTIFIER, identifier);
+                return;
+            }
 
-            if ((i=fileReader.read()) != -1 || !Character.isWhitespace((char)i)) {
-                char character = (char) i;
-//                if (character=>'a' && character <= 'z' || i >= 'A' && i <= 'Z' || i == '_') {
-////                    while();
-////                    currentToken = new Scanner.Scanner.Token(value, type);
+            if (Character.isDigit((char)this.character)) {
+                boolean isInteger = true;
+                String identifier = "";
+                identifier += (char)this.character;
+                while((this.character=this.fileReader.read()) != -1) {
+                    if (Character.isDigit((char)this.character)) {
+                        identifier += (char)character;
+                    } else if ((char)this.character == '.') {
+                        identifier += (char)character;
+                        isInteger = false;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                if (isInteger) {
+                    this.currentToken = new Token(TokenType.NUMBER, identifier);
+                } else {
+                    this.currentToken = new Token(TokenType.BIG_INTEGER, identifier);
+                }
+                return;
+            }
+
+//            if ((char)this.character == '&') {
+//                if((this.character=this.fileReader.read()) != -1) {
+//                    try {
+//                        if ((char)this.character == '&') {
+//                            this.character=this.fileReader.read();
+//                            this.currentToken = new Token(TokenType.AND, "&&");
+//                            return;
+//                        } else throw new Exception();
+//                    } catch (Exception e) {
+//                        System.out.println("No such smth, only &&");
+//
+//                    }
+//                }
+//            }
+
+//            if ((char)this.character == '|') {
+//                if((this.character=this.fileReader.read()) != -1) {
+//                    try {
+//                        if ((char)this.character == '|') {
+//                            this.character=this.fileReader.read();
+//                            this.currentToken = new Token(TokenType.OR, "||");
+//                            return;
+//                        } else throw new Exception();
+//                    } catch (Exception e) {
+//                        System.out.println("No such smth, only ||");
+//                    }
 //
 //                }
+//            }
 
-                switch ((char)i) {
-                    case ' ':
-                        break;
-                    case '{':
-                        tokens.add(TokenType.OPEN_CURLY_BRACKET);
-                        break;
-                    case '}':
-                        tokens.add(TokenType.CLOSE_CURLY_BRACKET);
-                        break;
-                    case '(':
-                        tokens.add(TokenType.OPEN_ROUND_BRACKET);
-                        break;
-                    case ')':
-                        tokens.add(TokenType.CLOSE_ROUND_BRACKET);
-                        break;
-                    case '[':
-                        tokeType = TokenType.OPEN_SQUARE_BRACKET;
-                        break;
-                    case ']':
-                        tokens.add(TokenType.CLOSE_SQUARE_BRACKET);
-                        break;
-                    case '=':
-                        tokens.add(TokenType.EQUALS);
-                        break;
-                    case ',':
-                        tokens.add(TokenType.COMMA);
-                        break;
-                    case ';':
-                        tokens.add(TokenType.SEMI_COLON);
-                        break;
-                    case '!':
-                        addToken (tokens, TokenType.EXCLAMATION_MARK, "!");
-//                        Scanner.Scanner.Token currentToken = new Scanner.Scanner.Token(Scanner.TokenType.EXCLAMATION_MARK, "!");
-//                        tokens.add(currentToken);
-                        break;
-                    case '"':
-                        Token currentToken = new Token(TokenType.QUATATION_MARKS, "\"");
-                        tokens.add(currentToken);
-                        break;
+            switch ((char)this.character) {
+                case '&':
+                    if((this.character=this.fileReader.read()) != -1) {
+                        try {
+                            if ((char)this.character == '&') {
+                                this.currentToken = new Token(TokenType.AND, "&&");
+                                return;
+                            } else throw new Exception();
+                        } catch (Exception e) {
+                            System.out.println("No such smth, only &&");
+                            this.currentToken = new Token(TokenType.UNKNOWN, null);
+                            return;
+                        }
+                    }
+                    break;
+                case '|':
+                    if((this.character=this.fileReader.read()) != -1) {
+                        try {
+                            if ((char)this.character == '|') {
+                                this.currentToken = new Token(TokenType.OR, "||");
+                                return;
+                            } else throw new Exception();
+                        } catch (Exception e) {
+                            System.out.println("No such smth, only ||");
+                            this.currentToken = new Token(TokenType.UNKNOWN, null);
+                            return;
+                        }
+                    }
+                    break;
+                case '{':
+                    this.currentToken = new Token(TokenType.OPEN_CURLY_BRACKET, "{");
+                    break;
+                case '}':
+                    this.currentToken = new Token(TokenType.CLOSE_CURLY_BRACKET, "}");
+                    break;
+                case '(':
+                    this.currentToken = new Token(TokenType.OPEN_ROUND_BRACKET, "(");
+                    break;
+                case ')':
+                    this.currentToken = new Token(TokenType.CLOSE_ROUND_BRACKET, ")");
+                    break;
+                case '[':
+                    this.currentToken = new Token(TokenType.OPEN_SQUARE_BRACKET, "[");
+                    break;
+                case ']':
+                    this.currentToken = new Token(TokenType.CLOSE_SQUARE_BRACKET, "]");
+                    break;
+                case '=':
+                    this.currentToken = new Token(TokenType.EQUALS, "=");
+                    break;
+                case ',':
+                    this.currentToken = new Token(TokenType.COMMA, ",");
+                    break;
+                case ';':
+                    this.currentToken = new Token(TokenType.SEMI_COLON, ";");
+                    break;
+                case '!':
+                    this.currentToken = new Token(TokenType.EXCLAMATION_MARK, "!");
+                    break;
+                case '"':
+                    //while
+                    this.currentToken = new Token(TokenType.QUATATION_MARKS, "\"");
+                    break;
+                case '.':
+                    this.currentToken = new Token(TokenType.POINT, ".");
+                    break;
 
-                }
-                System.out.println((char)i);
+                //comparisons
+                case '<': //<=
+                    this.currentToken = new Token(TokenType.LESS_THAN, "<");
+                    break;
+                case '>':
+                    this.currentToken = new Token(TokenType.MORE_THAN, ">");
+                    break;
+
+                //math operations
+                case '+':
+                    this.currentToken = new Token(TokenType.PLUS, "+");
+                    break;
+                case '-':
+                    this.currentToken = new Token(TokenType.MINUS, "-");
+                    break;
+                case '*':
+                    this.currentToken = new Token(TokenType.MULTIPLY, "*");
+                    break;
+                case '/':
+                    this.currentToken = new Token(TokenType.DIVIDE, "/");
+                    break;
+
+                default:
+                    this.currentToken = new Token(TokenType.UNKNOWN, "");
 
             }
-            System.out.println(tokens);
+            this.character=this.fileReader.read();
         } catch (IOException e) {
 
         }
-//        aa(fileReader);
-
     }
 }
