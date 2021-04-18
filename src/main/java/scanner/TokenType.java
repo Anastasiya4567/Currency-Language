@@ -1,7 +1,7 @@
 package scanner;
 
 public enum TokenType {
-    UNKNOWN,
+    UNDEFINED,
     OPEN_ROUND_BRACKET,
     CLOSE_ROUND_BRACKET,
     OPEN_SQUARE_BRACKET,
@@ -12,7 +12,7 @@ public enum TokenType {
     NOT_EQUALS,
     COMMA,
     SEMI_COLON,
-    QUATATION_MARKS,
+    CONST_STRING,
     EXCLAMATION_MARK,
     IDENTIFIER,
     END_OF_FILE,
@@ -26,9 +26,6 @@ public enum TokenType {
     NUMBER,
     BIG_INTEGER,
     AND,
-    OR
-
-
-
-
+    OR,
+    COMMENT
 }

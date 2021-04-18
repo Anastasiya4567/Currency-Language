@@ -1,3 +1,6 @@
+int k = -12;
+/* i*n*/na/*/
+
 import currencies.json;
 
 Currency exchange(Currency cur, String val) {
