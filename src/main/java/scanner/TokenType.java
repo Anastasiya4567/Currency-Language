@@ -1,22 +1,34 @@
-package Scanner.src;
+package scanner;
 
 public enum TokenType {
-    UNKNOWN,
+    UNDEFINED,
     OPEN_ROUND_BRACKET,
     CLOSE_ROUND_BRACKET,
     OPEN_SQUARE_BRACKET,
     CLOSE_SQUARE_BRACKET,
     OPEN_CURLY_BRACKET,
     CLOSE_CURLY_BRACKET,
+    ASSIGN,
     EQUALS,
     NOT_EQUALS,
     COMMA,
     SEMI_COLON,
-    QUATATION_MARKS,
+    CONST_STRING,
     EXCLAMATION_MARK,
     IDENTIFIER,
-    END_OF_FILE
-
-
-
+    END_OF_FILE,
+    POINT,
+    LESS_THAN,
+    LESS_OR_EQUALS,
+    MORE_THAN,
+    MORE_OR_EQUALS,
+    PLUS,
+    MINUS,
+    MULTIPLY,
+    DIVIDE,
+    NUMBER,
+    BIG_DECIMAL,
+    AND,
+    OR,
+    COMMENT
 }
