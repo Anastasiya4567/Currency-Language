@@ -4,14 +4,10 @@ import java.io.*;
 
 public class Main {
 
-    public static void main (String args[]) throws FileNotFoundException {
+    public static void main (String[] args) {
         FileReader fileReader;
 
         try {
-//            BufferedReader inputStream = new BufferedReader(new FileReader("xanadu.txt"));
-//            InputStream in = new FileInputStream("src/main/java/scanner/CProgram.txt");
-//            Reader reader = new InputStreamReader(in, "US-ASCII");
-////            vs
             fileReader = new FileReader("src/main/java/scanner/CProgram.txt");
 
             Scanner scanner = new Scanner(fileReader);
@@ -20,7 +16,11 @@ public class Main {
                 scanner.next();
             }
         } catch (FileNotFoundException er) {
-            System.out.println("No file found or unsupported encoding occurred");
+            System.out.println("No such file found");
+        } catch (IOException e) {
+            System.out.println("Input/output error");
+        } catch (Exception e) {
+            e.getMessage();
         }
     }
 }

@@ -1,25 +1,24 @@
-int k = -12;
-/* i*n*/na/*/
+int k <= -12;
+/* i*n */
 
 import currencies.json;
 
-Currency exchange(Currency cur, String val) {
+Currency exchange(Currency cur, String currType) {
 	return EUR(cur);
 }
 
 int main() {
-	Currency dol = USD(2);
+	Currency dol = USD(8);
 	Currency eu = USD(2EUR);
 	Currency sum = dol + eu;
 	
-	Currency[] valutes = {2PLN, 1USD, 3USD};
+	Currency[] currs = {2PLN, 1USD, 3USD};
 
 	for(int i = 0; i<3; i=i+1) {
-		if (getCurrency(valutes[i]) != "EUR") {
-			valutes[i] = exchange(valutes[i], "EUR");
+		if (getCurrency(currs[i]) != "EUR") {
+			currs[i] = exchange(currs[i], "EUR");
 		}
-		print(valutes[i], ", ");
+		print(currs[i], ", ");
 	}
 	return 0;
-
 }
