@@ -1,7 +1,7 @@
 int k <= -12;
 /* i*n */
 
-import currencies.json;
+import "currencies.json";
 
 Currency exchange(Currency cur, String currType) {
 	return EUR(cur);
@@ -11,14 +11,15 @@ int main() {
 	Currency dol = USD(8);
 	Currency eu = USD(2EUR);
 	Currency sum = dol + eu;
-	
+	//ArrayVariableDeclaration (with optional parameter - initialization value)
 	Currency[] currs = {2PLN, 1USD, 3USD};
 
 	for(int i = 0; i<3; i=i+1) {
-		if (getCurrency(currs[i]) != "EUR") {
+		if (getCurrency(currs[i]) != "EUR" || dd > dw && dw < dw ) {
 			currs[i] = exchange(currs[i], "EUR");
 		}
 		print(currs[i], ", ");
+
 	}
 	return 0;
 }

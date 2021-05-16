@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Scanner {
+public class Scanner implements IScanner {
     private final Reader reader;
     private Token currentToken;
     private int character;
@@ -46,11 +46,10 @@ public class Scanner {
         } catch (IOException e) {
             throw new Exception("Input/output error");
         }
-
         next();
     }
 
-    public int getNextCharacter() throws IOException {
+    private int getNextCharacter() throws IOException {
         this.character = reader.read();
         switch ((char) this.character) {
             case '\t' -> this.column += 4;
@@ -63,7 +62,7 @@ public class Scanner {
         return this.character;
     }
 
-    public boolean ifNumber(int currentLine, int currentColumn) throws Exception {
+    private boolean ifNumber(int currentLine, int currentColumn) throws Exception {
         if (Character.isDigit((char) this.character)) {
             boolean isInteger = true;
             int numberOfDigits = 1;
@@ -74,7 +73,8 @@ public class Scanner {
                     throw new Exception("Bad format of number; line " + currentLine + ", column " + currentColumn);
                 }
                 if ((char) this.character != '.') {
-                    this.currentToken = new Token(TokenType.NUMBER, identifier.toString());
+                    this.currentToken = new Token(TokenType.NUMBER, identifier.toString(),
+                            new TokenPosition(currentLine, currentColumn));
                     return true;
                 } else {
                     identifier.append((char) this.character);
@@ -112,7 +112,8 @@ public class Scanner {
                             }
                             getNextCharacter();
                         }
-                        this.currentToken = new Token(TokenType.BIG_DECIMAL, identifier.toString());
+                        this.currentToken = new Token(TokenType.BIG_DECIMAL, identifier.toString(),
+                                new TokenPosition(currentLine, currentColumn));
                         return true;
                     }
                 }
@@ -120,51 +121,59 @@ public class Scanner {
 
             }
             if (isInteger) {
-                this.currentToken = new Token(TokenType.NUMBER, identifier.toString());
+                this.currentToken = new Token(TokenType.NUMBER, identifier.toString(),
+                        new TokenPosition(currentLine, currentColumn));
                 return true;
             }
-            this.currentToken = new Token(TokenType.BIG_DECIMAL, identifier.toString());
+            this.currentToken = new Token(TokenType.BIG_DECIMAL, identifier.toString(),
+                        new TokenPosition(currentLine, currentColumn));
             return true;
 
         }
         return false;
     }
 
-    public boolean ifComment(int currentLine, int currentColumn) throws Exception {
-        if ((char) character == '/') {
-            getNextCharacter();
+    private boolean buildComment(int currentLine, int currentColumn) throws Exception {
+        StringBuilder comment = new StringBuilder();
+        while (getNextCharacter() != -1) {
             if ((char) this.character == '*') {
-                StringBuilder comment = new StringBuilder();
-                while (getNextCharacter() != -1) {
-                    if ((char) this.character == '*') {
-                        comment.append((char) this.character);
-                        if (getNextCharacter() != -1) {
-                            if ((char) this.character == '/') {
-                                this.currentToken = new Token(TokenType.COMMENT, "/*" + comment + "/");
-                                getNextCharacter();
-                                return true;
-                            } else {
-                                comment.append((char) this.character);
-                            }
-                        } else throw new Exception("Unclosed comment; line " + currentLine + ", column " + currentColumn);
+                comment.append((char) this.character);
+                if (getNextCharacter() != -1) {
+                    if ((char) this.character == '/') {
+                        this.currentToken = new Token(TokenType.COMMENT, "/*" + comment + "/",
+                                new TokenPosition(currentLine, currentColumn));
+                        getNextCharacter();
+                        return true;
                     } else {
                         comment.append((char) this.character);
                     }
-                }
-                throw new Exception("Unclosed comment; line " + currentLine + ", column " + currentColumn);
+                } else throw new Exception("Unclosed comment; line " + currentLine + ", column " + currentColumn);
             } else {
-                this.currentToken = new Token(TokenType.DIVIDE, "/");
+                comment.append((char) this.character);
+            }
+        }
+        throw new Exception("Unclosed comment; line " + currentLine + ", column " + currentColumn);
+    }
+
+    private boolean ifComment(int currentLine, int currentColumn) throws Exception {
+        if ((char) character == '/') {
+            getNextCharacter();
+            if ((char) this.character == '*') {
+                return this.buildComment(currentLine, currentColumn);
+            } else {
+                this.currentToken = new Token(TokenType.DIVIDE, "/",
+                        new TokenPosition(currentLine, currentColumn));
                 return true;
             }
         }
         return false;
     }
 
-    public boolean ifLogicalOperators(int currentLine, int currentColumn) throws Exception {
+    private boolean ifLogicalOperators(int currentLine, int currentColumn) throws Exception {
         if ((char) character == '&') {
             getNextCharacter();
             if ((char) this.character == '&') {
-                this.currentToken = new Token(TokenType.AND, "&&");
+                this.currentToken = new Token(TokenType.AND, "&&", new TokenPosition(currentLine, currentColumn));
                 getNextCharacter();
                 return true;
             } throw new Exception("Expected && but got &" + (char)this.character +
@@ -174,7 +183,7 @@ public class Scanner {
         if ((char) character == '|') {
             getNextCharacter();
             if ((char) this.character == '|') {
-                this.currentToken = new Token(TokenType.OR, "||");
+                this.currentToken = new Token(TokenType.OR, "||", new TokenPosition(currentLine, currentColumn));
                 getNextCharacter();
                 return true;
             } throw new Exception("Expected || but got |" + (char)this.character +
@@ -183,7 +192,7 @@ public class Scanner {
         return false;
     }
 
-    public boolean ifIdentifier(int currentLine, int currentColumn) throws Exception {
+    private boolean ifIdentifier(int currentLine, int currentColumn) throws Exception {
         if (Character.isLetter((char)this.character)) {
             StringBuilder identifier = new StringBuilder("" + (char)this.character);
             int numberOfLetters = 1;
@@ -196,13 +205,14 @@ public class Scanner {
                 this.getNextCharacter();
 
             }
-            this.currentToken = new Token(TokenType.IDENTIFIER, identifier.toString());
+            this.currentToken = new Token(TokenType.IDENTIFIER, identifier.toString(),
+                    new TokenPosition(currentLine, currentColumn));
             return true;
         }
         return false;
     }
 
-    public boolean ifConstString(int currentLine, int currentColumn) throws Exception {
+    private boolean ifConstString(int currentLine, int currentColumn) throws Exception {
         if ((char) character == '"') {
             int numberOfConstSigns = 0;
             StringBuilder quotation = new StringBuilder();
@@ -214,7 +224,8 @@ public class Scanner {
                     }
                 }
                 else {
-                    this.currentToken = new Token(TokenType.CONST_STRING, "\"" + quotation.toString() + "\"");
+                    this.currentToken = new Token(TokenType.CONST_STRING, "\"" + quotation.toString() + "\"",
+                            new TokenPosition(currentLine, currentColumn));
                     getNextCharacter();
                     return true;
                 }
@@ -224,17 +235,74 @@ public class Scanner {
         return false;
     }
 
+    private void skipSpaces(int currentLine, int currentColumn) throws Exception {
+        int numberOfSpaces = 0;
+        while (Character.isWhitespace((char)this.character)) {
+            if (++numberOfSpaces >= MAX_NUMBER_OF_SPACES) {
+                throw new Exception("The number of spaces can't be so large;  line " + currentLine + ", column " + currentColumn);
+            }
+            getNextCharacter();
+        }
+    }
+
+    private void matchComparison(int currentLine, int currentColumn) throws IOException {
+        switch ((char) this.character) {
+            case '<' -> {
+                getNextCharacter();
+                if ((char) this.character == '=')
+                    this.currentToken = new Token(TokenType.LESS_OR_EQUALS, "<=",
+                            new TokenPosition(currentLine, currentColumn));
+                else {
+                    this.currentToken = new Token(TokenType.LESS_THAN, "<",
+                            new TokenPosition(currentLine, currentColumn));
+                    return;
+                }
+            }
+            case '>' -> {
+                getNextCharacter();
+                if ((char) this.character == '=')
+                    this.currentToken = new Token(TokenType.MORE_OR_EQUALS, ">=",
+                            new TokenPosition(currentLine, currentColumn));
+                else {
+                    this.currentToken = new Token(TokenType.MORE_THAN, ">",
+                            new TokenPosition(currentLine, currentColumn));
+                    return;
+                }
+            }
+            case '=' -> {
+                getNextCharacter();
+                if ((char) this.character == '=')
+                    this.currentToken = new Token(TokenType.EQUALS, "==",
+                            new TokenPosition(currentLine, currentColumn));
+                else {
+                    this.currentToken = new Token(TokenType.ASSIGN, "=",
+                            new TokenPosition(currentLine, currentColumn));
+                    return;
+                }
+            }
+            case '!' -> {
+                getNextCharacter();
+                if ((char) this.character == '=')
+                    this.currentToken = new Token(TokenType.NOT_EQUALS, "!=",
+                            new TokenPosition(currentLine, currentColumn));
+                else {
+                    this.currentToken = new Token(TokenType.EXCLAMATION_MARK, "!",
+                            new TokenPosition(currentLine, currentColumn));
+                    return;
+                }
+            }
+            default -> this.currentToken = new Token(TokenType.UNDEFINED, "",
+                    new TokenPosition(currentLine, currentColumn));
+        }
+
+    }
+
     public void next() throws Exception {
         try {
-            int numberOfSpaces = 0;
-            int currentLine = this.line, currentColumn = this.column;
+            int currentLine = this.line;
+            int currentColumn = this.column;
 
-            while (Character.isWhitespace((char)this.character)) {
-                if (++numberOfSpaces >= MAX_NUMBER_OF_SPACES) {
-                    throw new Exception("The number of spaces can't be so large;  line " + currentLine + ", column " + currentColumn);
-                }
-                getNextCharacter();
-            }
+            this.skipSpaces(currentLine, currentColumn);
 
             currentLine = this.line;
             currentColumn = this.column;
@@ -251,54 +319,14 @@ public class Scanner {
             if (this.ifComment(currentLine, currentColumn)) return;
 
             if (tokens.containsKey(Character.toString(this.character))) {
-                this.currentToken = new Token(tokens.get(Character.toString(this.character)), Character.toString(this.character));
+                this.currentToken = new Token(tokens.get(Character.toString(this.character)),
+                        Character.toString(this.character), new TokenPosition(currentLine, currentColumn));
             } else {
-                // comparisons
-                switch ((char) this.character) {
-                    case '<' -> {
-                        getNextCharacter();
-                        if ((char) this.character == '=')
-                            this.currentToken = new Token(TokenType.LESS_OR_EQUALS, "<=");
-                        else {
-                            this.currentToken = new Token(TokenType.LESS_THAN, "<");
-                            return;
-                        }
-                    }
-                    case '>' -> {
-                        getNextCharacter();
-                        if ((char) this.character == '=')
-                            this.currentToken = new Token(TokenType.MORE_OR_EQUALS, ">=");
-                        else {
-                            this.currentToken = new Token(TokenType.MORE_THAN, ">");
-                            return;
-                        }
-                    }
-                    case '=' -> {
-                        getNextCharacter();
-                        if ((char) this.character == '=')
-                            this.currentToken = new Token(TokenType.EQUALS, "==");
-                        else {
-                            this.currentToken = new Token(TokenType.ASSIGN, "=");
-                            return;
-                        }
-                    }
-                    case '!' -> {
-                        getNextCharacter();
-                        if ((char) this.character == '=')
-                            this.currentToken = new Token(TokenType.NOT_EQUALS, "!=");
-                        else {
-                            this.currentToken = new Token(TokenType.EXCLAMATION_MARK, "!");
-                            return;
-                        }
-                    }
-                    default -> this.currentToken = new Token(TokenType.UNDEFINED, "");
-                }
+                this.matchComparison(currentLine, currentColumn);
             }
             getNextCharacter();
+
         }
-        catch (Exception e) {
-            this.currentToken = new Token(TokenType.UNDEFINED, null);
-            throw e;
-        }
+        catch (Exception e) { throw e; }
     }
 }
