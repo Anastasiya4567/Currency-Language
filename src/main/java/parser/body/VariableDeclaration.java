@@ -1,12 +1,16 @@
-package parser.expression;
+package parser.body;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import parser.basic.Identifier;
+import parser.type.Type;
 import scanner.token.TokenPosition;
 
 @Getter
 @AllArgsConstructor
-public class Expression {
+public class VariableDeclaration {
+    private Type type;
+    private Identifier identifier;
     private Object value;
     private TokenPosition tokenPosition;
 }

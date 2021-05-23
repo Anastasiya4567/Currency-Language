@@ -1,21 +1,13 @@
 package parser.type;
 
-import scanner.TokenPosition;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import scanner.token.TokenPosition;
 
+@Getter
+@AllArgsConstructor
 public abstract class Type {
-//    private Object type;
     private TokenPosition tokenPosition;
-
-//    public Object getType() {
-//        return type;
-//    }
-
-    public TokenPosition getTokenPosition() {
-        return tokenPosition;
-    }
-    public Type(TokenPosition tokenPosition) {
-        this.tokenPosition = tokenPosition;
-    }
 
 //    public Type(SimpleType simpleType, TokenPosition tokenPosition) {
 //        this.type = simpleType;

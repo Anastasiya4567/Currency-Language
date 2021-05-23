@@ -1,6 +1,8 @@
 package scanner;
 
 import org.junit.jupiter.api.Test;
+import scanner.token.Token;
+import scanner.token.TokenType;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -257,9 +259,9 @@ public class ScannerTest {
         ArrayList<Token> tokens = new ArrayList<>();
         scan(stringReader, tokens);
 
-        assertEquals(TokenType.BIG_DECIMAL, tokens.get(3).getTokenType());
+        assertEquals(TokenType.BIG_DECIMAL_NUMBER, tokens.get(3).getTokenType());
         assertEquals(tokens.get(3).getValue(),"213.231");
-        assertEquals(TokenType.BIG_DECIMAL, tokens.get(5).getTokenType());
+        assertEquals(TokenType.BIG_DECIMAL_NUMBER, tokens.get(5).getTokenType());
         assertEquals(tokens.get(5).getValue(),"0.11");
 
     }

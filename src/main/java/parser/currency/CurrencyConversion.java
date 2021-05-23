@@ -1,16 +1,17 @@
-package parser;
+package parser.currency;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import parser.currency.CurrencyAbbreviation;
 import scanner.token.TokenPosition;
 
-import java.math.BigDecimal;
+import java.util.Optional;
 
 @Getter
 @AllArgsConstructor
-public class Currency {
-    private BigDecimal value;
+public class CurrencyConversion {
     private CurrencyAbbreviation currencyAbbreviation;
+    private Object content;
+    private Optional<CurrencyAbbreviation> currency;
     private TokenPosition tokenPosition;
 }

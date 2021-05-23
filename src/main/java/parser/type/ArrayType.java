@@ -1,19 +1,13 @@
 package parser.type;
 
-import parser.type.SimpleType;
-import scanner.TokenPosition;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import scanner.token.TokenPosition;
 
+@Getter
 public class ArrayType  extends Type {
     private SimpleType type;
     private Integer size;
-
-    public SimpleType getType() {
-        return type;
-    }
-
-    public Integer getSize() {
-        return size;
-    }
 
     public ArrayType(SimpleType type, Integer size, TokenPosition tokenPosition) {
         super(tokenPosition);

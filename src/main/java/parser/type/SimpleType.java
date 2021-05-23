@@ -1,14 +1,12 @@
 package parser.type;
 
-import scanner.TokenPosition;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import scanner.token.TokenPosition;
 
+@Getter
 public class SimpleType extends Type {
     private String type;
-
-    public String getType() {
-        return type;
-    }
-
 
     public SimpleType(String type, TokenPosition tokenPosition) {
         super(tokenPosition);

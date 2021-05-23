@@ -1,9 +1,11 @@
 package parser;
 
+import lombok.Getter;
 import parser.basic.Identifier;
 import parser.basic.Number;
-import scanner.TokenPosition;
+import scanner.token.TokenPosition;
 
+@Getter
 public class ArrayElementReference {
     private Identifier arrayName;
     private Object index;

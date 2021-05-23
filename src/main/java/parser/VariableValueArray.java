@@ -1,12 +1,14 @@
-package parser.basic;
+package parser;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import scanner.token.TokenPosition;
 
+import java.util.ArrayList;
+
 @Getter
 @AllArgsConstructor
-public class Number {
-    private int value;
+public class VariableValueArray {
+    private ArrayList<Object> values;
     private TokenPosition tokenPosition;
 }

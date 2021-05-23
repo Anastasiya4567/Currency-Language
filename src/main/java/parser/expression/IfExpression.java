@@ -1,17 +1,15 @@
 package parser.expression;
 
-import scanner.TokenPosition;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import scanner.token.TokenPosition;
 
 import java.util.Optional;
 
+@Getter
+@AllArgsConstructor
 public class IfExpression {
     private Object expression;
     private Optional<IfExpression> ifExpression;
     private TokenPosition tokenPosition;
-
-    public IfExpression(Object expression, Optional<IfExpression> ifExpression, TokenPosition tokenPosition) {
-        this.expression = expression;
-        this.ifExpression = ifExpression;
-        this.tokenPosition = tokenPosition;
-    }
 }

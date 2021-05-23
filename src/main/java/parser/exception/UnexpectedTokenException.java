@@ -1,7 +1,7 @@
-package parser;
+package parser.exception;
 
-import scanner.Token;
-import scanner.TokenPosition;
+import scanner.token.Token;
+import scanner.token.TokenPosition;
 
 public class UnexpectedTokenException extends Exception {
     public UnexpectedTokenException(String expectedToken, String badToken, TokenPosition tokenPosition) {
