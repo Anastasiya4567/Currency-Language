@@ -1,4 +1,4 @@
-package parser.basic;
+package parser;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,7 +6,7 @@ import scanner.token.TokenPosition;
 
 @Getter
 @AllArgsConstructor
-public class BigDecimal {
-    private java.math.BigDecimal value;
-    private TokenPosition position;
+public class Instruction {
+    private Object body;
+    private TokenPosition tokenPosition;
 }

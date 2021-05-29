@@ -1,7 +1,6 @@
 package parser;
 
 import parser.basic.*;
-import parser.basic.Number;
 import parser.body.*;
 import parser.currency.CurrencyAbbreviation;
 import parser.currency.CurrencyAssignment;
@@ -16,15 +15,17 @@ import scanner.token.TokenPosition;
 import scanner.token.TokenType;
 import scanner.IScanner;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
+
+import static java.lang.Integer.parseInt;
 
 public class Parser {
     private final IScanner scanner;
     private Token currentToken;
     private ArrayList<String> knownCurrencies;
-
 
     public Parser(IScanner scanner) {
         this.scanner = scanner;
@@ -32,15 +33,50 @@ public class Parser {
 //        this.knownCurrencies = new ArrayList<>("USD", "EUR", "PLN");
     }
 
-    public void parse() {
+    public void parse() throws Exception {
         Token currentToken = scanner.getCurrentToken();
-        parseToken();
+        Program program = tryBuildProgram();
     }
 
     private Token getNextToken() throws Exception {
         scanner.next();
         this.currentToken = scanner.getCurrentToken();
         return this.currentToken;
+    }
+
+    public Program tryBuildProgram() throws Exception {
+        Import _import = tryBuildImport();
+        if (_import == null)
+            return null;
+        FunctionDeclaration functionDeclaration = tryBuildFunctionDeclaration();
+        if (functionDeclaration == null)
+            return null;
+
+        MainFunction mainFunction = tryBuildMainFunction();
+        if (mainFunction == null)
+            throw new UnexpectedTokenException("main function declaration", currentToken);
+        return new Program(null, mainFunction, currentToken.getTokenPosition());
+    }
+
+    public MainFunction tryBuildMainFunction() throws Exception {
+        if (currentToken.getTokenType() != TokenType.INT)
+            return null;
+        if (getNextToken().getTokenType() != TokenType.MAIN_FUNCTION)
+            throw new UnexpectedTokenException("main", currentToken);
+        if (getNextToken().getTokenType() != TokenType.OPEN_ROUND_BRACKET)
+            throw new UnexpectedTokenException("(", currentToken);
+        if (getNextToken().getTokenType() != TokenType.CLOSE_ROUND_BRACKET)
+            throw new UnexpectedTokenException(")", currentToken);
+        if (getNextToken().getTokenType() != TokenType.OPEN_CURLY_BRACKET)
+            throw new UnexpectedTokenException("{", currentToken);
+        getNextToken();
+        Instruction instruction;
+        ArrayList<Instruction> instructions = new ArrayList<>();
+        while((instruction = tryBuildInstruction()) != null)
+            instructions.add(instruction);
+        if (currentToken.getTokenType() != TokenType.CLOSE_CURLY_BRACKET)
+            throw new UnexpectedTokenException("}", currentToken);
+        return new MainFunction(instructions, currentToken.getTokenPosition());
     }
 
     public Import tryBuildImport() throws Exception {
@@ -71,7 +107,7 @@ public class Parser {
         SimpleType simpleType = tryBuildSimpleType();
         if (simpleType == null)
             return null;
-        Token startingToken = scanner.getCurrentToken();
+        Token  startingToken = scanner.getCurrentToken();
         getNextToken();
         ArrayType arrayType = tryBuildArrayType(simpleType);
         if (arrayType != null)
@@ -87,18 +123,18 @@ public class Parser {
                 throw new UnexpectedTokenException("]", currentToken);
             return new ArrayType(simpleType, null, currentToken.getTokenPosition());
         }
-        Integer size = Integer.parseInt(currentToken.getValue());
+        Integer size = parseInt(currentToken.getValue());
         if (getNextToken().getTokenType() != TokenType.CLOSE_SQUARE_BRACKET)
             throw new UnexpectedTokenException("]", currentToken);
         return new ArrayType(simpleType, size, currentToken.getTokenPosition());
     }
 
     private Identifier tryBuildIdentifier () throws Exception {
-        TokenPosition startTokenPosition = currentToken.getTokenPosition();
+        Token startToken = currentToken;
         if (currentToken.getTokenType() != TokenType.IDENTIFIER)
             return null;
         getNextToken();
-        return new Identifier(currentToken.getValue(), startTokenPosition);
+        return new Identifier(startToken.getValue(), startToken.getTokenPosition());
     }
 
     public CurrencyAbbreviation tryBuildCurrencyAbbreviation () throws Exception {
@@ -113,14 +149,6 @@ public class Parser {
             return new CurrencyAbbreviation(abbreviation.toString(), currentToken.getTokenPosition());
         }
         return null;
-    }
-
-    public BigDecimal tryBuildBigDecimal () throws Exception {
-        if (this.currentToken.getTokenType() != TokenType.BIG_DECIMAL_NUMBER)
-            return null;
-        Token token = currentToken;
-        getNextToken();
-        return new BigDecimal(new java.math.BigDecimal(token.getValue()), token.getTokenPosition());
     }
 
     private CurrencyConversion tryBuildCurrencyConversionBody(CurrencyAbbreviation currencyAbbreviation, Object content) throws Exception {
@@ -141,13 +169,19 @@ public class Parser {
     }
 
     private CurrencyConversion tryBuildCurrencyContent(CurrencyAbbreviation currencyAbbreviation) throws Exception {
-        Number number = tryBuildNumber();
-        if (number != null)
-            return tryBuildCurrencyConversionBody(currencyAbbreviation, number);
+//        Number number = tryBuildNumber();
+//        if (number != null)
+//            return tryBuildCurrencyConversionBody(currencyAbbreviation, number);
 
-        BigDecimal bigDecimal = tryBuildBigDecimal();
-        if (bigDecimal != null)
+//        BigDecimal bigDecimal = tryBuildBigDecimal();
+//        if (bigDecimal != null)
+//            return tryBuildCurrencyConversionBody(currencyAbbreviation, bigDecimal);
+        if (currentToken.getTokenType() == TokenType.BIG_DECIMAL_NUMBER) {
+            BigDecimal bigDecimal = new BigDecimal(currentToken.getValue());
+            getNextToken();
             return tryBuildCurrencyConversionBody(currencyAbbreviation, bigDecimal);
+
+        }
 
         Identifier identifier = tryBuildIdentifier();
         if (identifier != null) {
@@ -180,16 +214,23 @@ public class Parser {
     }
 
     public CurrencyAssignment tryBuildCurrencyAssignment() throws Exception {
-        Number number = tryBuildNumber();
+        Integer number = getIfNumber();
         if (number != null)
             return tryBuildCurrencyAssignmentBody(number);
 
-        BigDecimal bigDecimal = tryBuildBigDecimal();
-        if (bigDecimal != null)
-            return tryBuildCurrencyAssignmentBody(bigDecimal);
+//        BigDecimal bigDecimal = tryBuildBigDecimal();
+//        if (bigDecimal != null)
+//            return tryBuildCurrencyAssignmentBody(bigDecimal);
+        if (currentToken.getTokenType() == TokenType.BIG_DECIMAL_NUMBER) {
+            Token token = currentToken;
+            getNextToken();
+            return tryBuildCurrencyAssignmentBody(new BigDecimal(token.getValue()));
+        }
+
 
         Identifier identifier = tryBuildIdentifier();
         if (identifier != null) {
+            getNextToken();
             ArrayElementReference arrayElementReference = tryBuildArrayElementReference(identifier);
             if (arrayElementReference == null)
                 throw new UnexpectedTokenException("number or reference to array element", currentToken);
@@ -201,19 +242,22 @@ public class Parser {
 
     public Expression tryBuildExpression () throws Exception {
         Identifier identifier = tryBuildIdentifier();
-        if (identifier != null)
-            //TRY BUILD FUNCTION CALL OR CURRENCY CONVERSION
+        if (identifier != null) {
             return new Expression(identifier, currentToken.getTokenPosition());
-        Number number = tryBuildNumber();
-        if (number != null)
+        }
+            //TRY BUILD FUNCTION CALL OR CURRENCY CONVERSION
+
+        Integer number = getIfNumber();
+        if (number != null) {
             return new Expression(number, currentToken.getTokenPosition());
-        BigDecimal bigDecimal = tryBuildBigDecimal();
-        if (bigDecimal == null)
+        }
+
+        if (currentToken.getTokenType() == TokenType.BIG_DECIMAL_NUMBER)
             return null;
-        Currency currency = tryBuildCurrency(bigDecimal);
-        if (currency != null)
-            return new Expression(currency, currentToken.getTokenPosition());
-        return new Expression(bigDecimal, currentToken.getTokenPosition());
+        getNextToken();
+        Currency currency = tryBuildCurrency(new BigDecimal(currentToken.getValue()));
+        return new Expression(Objects.requireNonNullElseGet(currency, () ->
+                new BigDecimal(currentToken.getValue())), currentToken.getTokenPosition());
     }
 
     public Currency tryBuildCurrency (BigDecimal bigDecimal) throws Exception {
@@ -221,16 +265,24 @@ public class Parser {
         if (currencyAbbreviation == null)
             return null;
         getNextToken();
-        return new Currency(bigDecimal.getValue(), currencyAbbreviation, currentToken.getTokenPosition());
+        return new Currency(bigDecimal, currencyAbbreviation, currentToken.getTokenPosition());
     }
 
-    public Number tryBuildNumber () throws Exception {
+    public Integer getIfNumber() throws Exception {
         if (currentToken.getTokenType() != TokenType.NUMBER)
             return null;
-        TokenPosition startTokenPosition = currentToken.getTokenPosition();
+        int number = parseInt(currentToken.getValue());
         getNextToken();
-        return new Number(Integer.parseInt(currentToken.getValue()), currentToken.getTokenPosition());
+        return number;
     }
+
+//    public Number tryBuildNumber () throws Exception {
+//        if (currentToken.getTokenType() != TokenType.NUMBER)
+//            return null;
+//        Token startToken = currentToken;
+//        getNextToken();
+//        return new Number(parseInt(startToken.getValue()), startToken.getTokenPosition());
+//    }
 
     public ArrayElementReference tryBuildArrayElementReference (Identifier identifier) throws Exception {
         if (currentToken.getTokenType() != TokenType.OPEN_SQUARE_BRACKET)
@@ -238,7 +290,7 @@ public class Parser {
         Token nextToken = getNextToken();
         Identifier indexIdentifier = tryBuildIdentifier();
         if (indexIdentifier == null) {
-            Number number = tryBuildNumber();
+            Integer number = getIfNumber();
             if (number == null)
                 return null;
             if (getNextToken().getTokenType() != TokenType.CLOSE_SQUARE_BRACKET)
@@ -253,26 +305,45 @@ public class Parser {
     }
 
     public Object tryBuildSimpleExpressionContent () throws Exception {
-        Expression expression = tryBuildExpression();
-        if (expression != null)
-            return expression;
-        getNextToken();
         Identifier identifier = tryBuildIdentifier();
-        if (identifier == null)
-            return null;
+        if (identifier == null) {
+            Expression expression = tryBuildExpression();
+            if (expression == null)
+                throw new UnexpectedTokenException("expression or function call", currentToken);
+            getNextToken();
+            return expression;
+        }
+
         FunctionCall functionCall = tryBuildFunctionCall(identifier);
-        return functionCall;
+        if (functionCall != null) {
+            getNextToken();
+            return functionCall;
+        }
+        return new Expression(identifier, currentToken.getTokenPosition());
+//        Expression expression = tryBuildExpression();
+//        if (expression != null)
+//            return expression;
+//        getNextToken();
+//        Identifier identifier = tryBuildIdentifier();
+//        if (identifier == null)
+//            return null;
+//        FunctionCall functionCall = tryBuildFunctionCall(identifier);
+//        return functionCall;
     }
 
     public SimpleExpression tryBuildSimpleExpression () throws Exception {
         if (currentToken.getTokenType() == TokenType.EXCLAMATION_MARK) {
             getNextToken();
-            if (tryBuildSimpleExpressionContent() == null)
+            Object simpleExpressionContent = tryBuildSimpleExpressionContent();
+            if (simpleExpressionContent == null)
                 throw new UnexpectedTokenException("expression", currentToken);
-            return new SimpleExpression(true, tryBuildSimpleExpressionContent(), currentToken.getTokenPosition());
-        } else if (tryBuildSimpleExpressionContent() == null)
-            return null;
-        return new SimpleExpression(false, tryBuildSimpleExpressionContent(), currentToken.getTokenPosition());
+            return new SimpleExpression(true, simpleExpressionContent, currentToken.getTokenPosition());
+        } else {
+            Object simpleExpressionContent = tryBuildSimpleExpressionContent();
+            if (simpleExpressionContent == null)
+                return null;
+            return new SimpleExpression(false, simpleExpressionContent, currentToken.getTokenPosition());
+        }
     }
 
     public boolean isRelationalOperator () {
@@ -288,7 +359,6 @@ public class Parser {
         if (leftSimpleExpression == null)
             return null;
 
-        getNextToken();
         if (!isRelationalOperator())
            return leftSimpleExpression;
         String relationalOperator = currentToken.getValue();
@@ -305,12 +375,12 @@ public class Parser {
         Object simpleOrComplexExpression = tryBuildComplexExpression();
         if (simpleOrComplexExpression == null)
             return null;
-        if (getNextToken().getTokenType() == TokenType.AND) {
+        if (currentToken.getTokenType() == TokenType.AND) {
             getNextToken();
             IfExpression ifExpression = tryBuildIfExpression();
             if (ifExpression == null)
                 throw new UnexpectedTokenException("expression", currentToken);
-            return new IfExpression(ifExpression, Optional.ofNullable(ifExpression), tokenPosition);
+            return new IfExpression(simpleOrComplexExpression, Optional.ofNullable(ifExpression), tokenPosition);
         }
         return new IfExpression(simpleOrComplexExpression, Optional.ofNullable(null), tokenPosition);
     }
@@ -337,20 +407,29 @@ public class Parser {
         return new Condition(isNegated, ifExpression, Optional.ofNullable(null), tokenPosition);
     }
 
-    public VariableDeclaration tryBuildVariableDeclaration () throws Exception {
+    public VariableDeclaration tryBuildVariableDeclaration() throws Exception {
         Type type = tryBuildType();
         if (type == null)
             return null;
         Identifier identifier = tryBuildIdentifier();
         if (identifier == null)
-            return null;
-        if (getNextToken().getTokenType() == TokenType.ASSIGN) {
+            throw new UnexpectedTokenException("identifier", currentToken);
+        if (currentToken.getTokenType() == TokenType.ASSIGN) {
             getNextToken();
-            Expression expression = tryBuildExpression();
-            if (expression == null)
-                throw new UnexpectedTokenException("expression", currentToken);
-            if (getNextToken().getTokenType() == TokenType.SEMI_COLON)
-                return new VariableDeclaration(type, identifier, expression, currentToken.getTokenPosition());
+            VariableValueArray variableValueArray = tryBuildVariableValueArray();
+            if (variableValueArray == null) {
+                Expression expression = tryBuildExpression();
+               if (expression == null)
+                   throw new UnexpectedTokenException("expression or variable value", currentToken);
+                if (currentToken.getTokenType() == TokenType.SEMI_COLON) {
+                    getNextToken();
+                    return new VariableDeclaration(type, identifier, expression, currentToken.getTokenPosition());
+                }
+            }
+            if (currentToken.getTokenType() == TokenType.SEMI_COLON) {
+                getNextToken();
+                return new VariableDeclaration(type, identifier, variableValueArray, currentToken.getTokenPosition());
+            }
         } else {
             if (currentToken.getTokenType() == TokenType.SEMI_COLON)
                 return new VariableDeclaration(type, identifier, null, currentToken.getTokenPosition());
@@ -358,43 +437,101 @@ public class Parser {
         throw new UnexpectedTokenException(";", currentToken);
     }
 
+    public ArgumentDeclaration tryBuildArgumentDeclaration() throws Exception {
+        Type type = tryBuildType();
+        if (type == null)
+            return null;
+        Identifier identifier = tryBuildIdentifier();
+        if (identifier == null)
+            throw new UnexpectedTokenException("identifier", currentToken);
+        if (currentToken.getTokenType() == TokenType.ASSIGN) {
+            getNextToken();
+            ArgumentValue argumentValue = tryBuildArgumentValue();
+            if (argumentValue == null)
+                throw new UnexpectedTokenException("expression or variable value", currentToken);
+            return new ArgumentDeclaration(type, identifier, argumentValue, currentToken.getTokenPosition());
+            }
+        else
+            return new ArgumentDeclaration(type, identifier, null, currentToken.getTokenPosition());
+    }
+
     public VariableDefinition tryBuildVariableDefinitionValue (Object name) throws Exception {
-        if (getNextToken().getTokenType() != TokenType.ASSIGN)
+        if (currentToken.getTokenType() != TokenType.ASSIGN)
             throw new UnexpectedTokenException("=", currentToken);
+        getNextToken();
+        VariableValueArray variableValueArray = tryBuildVariableValueArray();
+        if (variableValueArray != null) {
+            if (currentToken.getTokenType() == TokenType.SEMI_COLON) {
+                getNextToken();
+                return new VariableDefinition(name, variableValueArray, currentToken.getTokenPosition());
+            }
+            throw new UnexpectedTokenException(";", currentToken);
+        }
+
         Expression expression = tryBuildExpression();
         if (expression == null)
             throw new UnexpectedTokenException("expression", currentToken);
-        if (getNextToken().getTokenType() == TokenType.SEMI_COLON) {
+        if (currentToken.getTokenType() == TokenType.SEMI_COLON) {
+            getNextToken();
             return new VariableDefinition(name, expression, currentToken.getTokenPosition());
         }
         throw new UnexpectedTokenException(";", currentToken);
     }
 
     public VariableDefinition tryBuildVariableDefinition (Identifier identifier) throws Exception {
+//        VariableValueArray variableValueArray = tryBuildVariableValueArray();
         ArrayElementReference arrayElementReference = tryBuildArrayElementReference(identifier);
+        if (arrayElementReference == null)
+            getNextToken();
         return tryBuildVariableDefinitionValue(Objects.requireNonNullElse(arrayElementReference, identifier));
     }
 
+    public ArgumentValue tryBuildArgumentValue() throws Exception {
+        Integer number = getIfNumber();
+        if (number != null)
+            return new ArgumentValue(number, currentToken.getTokenPosition());
+        if (currentToken.getTokenType() == TokenType.CONST_STRING)
+            return new ArgumentValue(currentToken.getValue(), currentToken.getTokenPosition());
+        if (currentToken.getTokenType() == TokenType.BOOLEAN_VALUE)
+            return new ArgumentValue(currentToken.getValue(), currentToken.getTokenPosition());
+        if (currentToken.getTokenType() == TokenType.BIG_DECIMAL_NUMBER)
+            return new ArgumentValue(new BigDecimal(currentToken.getValue()), currentToken.getTokenPosition());
+//        BigDecimal bigDecimal = tryBuildBigDecimal();
+//        if (bigDecimal != null)
+//            return new ArgumentValue(bigDecimal, currentToken.getTokenPosition());
+        CurrencyConversion currencyConversion = tryBuildCurrencyConversion();
+        if (currencyConversion != null)
+            return new ArgumentValue(currencyConversion, currentToken.getTokenPosition());
+        CurrencyAssignment currencyAssignment = tryBuildCurrencyAssignment();
+        if (currencyAssignment != null)
+            return new ArgumentValue(currencyAssignment, currentToken.getTokenPosition());
+        return null;
+    }
+
     public VariableValue tryBuildVariableValue() throws Exception {
+        ArgumentValue argumentValue = tryBuildArgumentValue();
+        if (argumentValue != null) {
+            return new VariableValue(argumentValue, currentToken.getTokenPosition());
+        }
+
         Identifier identifier = tryBuildIdentifier();
         if (identifier == null)
             return null;
         ArrayElementReference arrayElementReference = tryBuildArrayElementReference(identifier);
-        if (arrayElementReference != null)
+        if (arrayElementReference != null) {
+            getNextToken();
             return new VariableValue(arrayElementReference, currentToken.getTokenPosition());
-
-        // if arg value
-        //
-        //
+        }
 
         FunctionCall functionCall = tryBuildFunctionCall(identifier);
-        if (functionCall != null)
-            return new VariableValue(functionCall, currentToken.getTokenPosition());
-        throw new UnexpectedTokenException("[, ) or ...", currentToken);
+        if (functionCall == null)
+            throw new UnexpectedTokenException("[, ) or ...", currentToken);
+        getNextToken();
+        return new VariableValue(functionCall, currentToken.getTokenPosition());
+
     }
 
     private ArrayList<Object> tryBuildFunctionCallArguments () throws Exception {
-        getNextToken();
         ArrayList<Object> arguments = new ArrayList<>();
         while (currentToken.getTokenType() != TokenType.CLOSE_ROUND_BRACKET) {
             getNextToken();
@@ -407,7 +544,7 @@ public class Parser {
                     throw new UnexpectedTokenException("expression", currentToken);
                 arguments.add(expression);
             }
-            if (getNextToken().getTokenType() == TokenType.COMMA
+            if (currentToken.getTokenType() == TokenType.COMMA
                     || currentToken.getTokenType() == TokenType.CLOSE_ROUND_BRACKET)
                 continue;
             throw new UnexpectedTokenException(", or )", currentToken);
@@ -430,7 +567,7 @@ public class Parser {
 //                if (variableDefinition != null)
 //                    values.add(variableDefinition);
 //                else throw new UnexpectedTokenException("identifier or function call", currentToken);
-            if (getNextToken().getTokenType() == TokenType.COMMA
+            if (currentToken.getTokenType() == TokenType.COMMA
                     || currentToken.getTokenType() == TokenType.CLOSE_CURLY_BRACKET)
                 continue;
             throw new UnexpectedTokenException(", or )", currentToken);
@@ -449,7 +586,7 @@ public class Parser {
     }
 
     public IfStatement tryBuildIfStatement() throws Exception {
-        if (currentToken.getValue() != "if")
+        if (!currentToken.getValue().equals("if"))
             return null;
         if (getNextToken().getTokenType() != TokenType.OPEN_ROUND_BRACKET)
             throw new UnexpectedTokenException("(", currentToken);
@@ -462,10 +599,13 @@ public class Parser {
         if (getNextToken().getTokenType() != TokenType.OPEN_CURLY_BRACKET)
             throw new UnexpectedTokenException("{", currentToken);
         getNextToken();
-        Body ifBody = tryBuildBody();
+        Instruction instruction;
+        ArrayList<Instruction> ifBody = new ArrayList<>();
+        while((instruction = tryBuildInstruction()) != null)
+            ifBody.add(instruction);
         if (currentToken.getTokenType() != TokenType.CLOSE_CURLY_BRACKET)
             throw new UnexpectedTokenException("}", currentToken);
-        if (getNextToken().getValue() != "else")
+        if (!getNextToken().getValue().equals("else"))
             return new IfStatement(condition, null, null, null);
         getNextToken();
         IfStatement ifStatement = tryBuildIfStatement();
@@ -477,34 +617,53 @@ public class Parser {
         if (currentToken.getTokenType() != TokenType.OPEN_CURLY_BRACKET)
             throw new UnexpectedTokenException("{", currentToken);
         getNextToken();
-        Body elseBody = tryBuildBody();
+        ArrayList<Instruction> elseBody = new ArrayList<>();
+        while((instruction = tryBuildInstruction()) != null)
+            elseBody.add(instruction);
         if (currentToken.getTokenType() != TokenType.CLOSE_CURLY_BRACKET)
             throw new UnexpectedTokenException("}", currentToken);
-        return new IfStatement(condition, Optional.of(ifBody), Optional.of(elseBody), Optional.of(ifStatement));
+        return new IfStatement(condition, ifBody, elseBody, Optional.of(ifStatement));
     }
 
-    //TO DO
-    public Body tryBuildBody() throws Exception {
+    public ReturnExpression tryBuildReturnExpression() throws Exception {
+        if (currentToken.getTokenType() != TokenType.RETURN)
+            return null;
+        getNextToken();
+        VariableValueArray variableValueArray = tryBuildVariableValueArray();
+        if (variableValueArray != null)
+            return new ReturnExpression(variableValueArray, currentToken.getTokenPosition());
+        Expression expression = tryBuildExpression();
+        if (expression == null)
+            throw new UnexpectedTokenException("variable value or expression", currentToken);
+        if (currentToken.getTokenType() != TokenType.SEMI_COLON)
+            throw new UnexpectedTokenException(";", currentToken);
+        getNextToken();
+        return new ReturnExpression(expression, currentToken.getTokenPosition());
+    }
+
+    public Instruction tryBuildInstruction() throws Exception {
         IfStatement ifStatement = tryBuildIfStatement();
         if (ifStatement != null)
-            return null;
+            return new Instruction(ifStatement, currentToken.getTokenPosition());
         ForStatement forStatement = tryBuildForStatement();
         if (forStatement != null)
-            return null;
+            return new Instruction(forStatement, currentToken.getTokenPosition());
         VariableDeclaration variableDeclaration = tryBuildVariableDeclaration();
         if (variableDeclaration != null)
-            return null;
-        if (currentToken.getTokenType() == TokenType.RETURN)
-            return null;
+            return new Instruction(variableDeclaration, currentToken.getTokenPosition());
+        ReturnExpression returnExpression = tryBuildReturnExpression();
+        if (returnExpression != null)
+            return new Instruction(returnExpression, currentToken.getTokenPosition());
+
         Identifier identifier = tryBuildIdentifier();
         if (identifier == null)
             return null;
         FunctionCall functionCall = tryBuildFunctionCall(identifier);
         if (functionCall != null)
-            return null;
+            return new Instruction(functionCall, currentToken.getTokenPosition());
         VariableDefinition variableDefinition = tryBuildVariableDefinition(identifier);
         if (variableDefinition != null)
-            return null;
+            return new Instruction(variableDefinition, currentToken.getTokenPosition());
         return null;
     }
 
@@ -536,22 +695,20 @@ public class Parser {
             throw new UnexpectedTokenException(")", currentToken);
         if (getNextToken().getTokenType() != TokenType.OPEN_CURLY_BRACKET)
             throw new UnexpectedTokenException("{", currentToken);
-        Body body = tryBuildBody();
-        // ?????????????
-        if (body == null)
-            throw new UnexpectedTokenException("expression", currentToken);
+        Instruction instruction;
+        ArrayList<Instruction> instructions = new ArrayList<>();
+        while((instruction = tryBuildInstruction()) != null)
+            instructions.add(instruction);
         if (currentToken.getTokenType() != TokenType.CLOSE_CURLY_BRACKET)
             throw new UnexpectedTokenException("{", currentToken);
-        return new ForStatement(forExpression, body);
+        return new ForStatement(forExpression, instructions);
     }
 
-    private boolean isReturnType() throws Exception {
-        if (currentToken.getTokenType() == TokenType.VOID)
-            return true;
-        Type type = tryBuildType();
-        if (type == null)
-            return false;
-        return true;
+    private Object tryBuildReturnType() throws Exception {
+        if (currentToken.getTokenType() != TokenType.VOID)
+            return tryBuildType();
+        getNextToken();
+        return currentToken.getValue();
     }
 
     private ArrayList<ArgumentDeclaration> tryBuildFunctionDeclarationArguments() throws Exception {
@@ -569,23 +726,24 @@ public class Parser {
         return argumentDeclarations;
     }
 
-    private Body tryBuildFunctionDeclarationBody() throws Exception {
+    private ArrayList<Instruction> tryBuildFunctionDeclarationBody() throws Exception {
         if (getNextToken().getTokenType() != TokenType.OPEN_CURLY_BRACKET)
             throw new UnexpectedTokenException("{", currentToken);
         if (getNextToken().getTokenType() == TokenType.CLOSE_CURLY_BRACKET)
-            return null;
-        Body body = tryBuildBody();
-        if (body == null)
-            throw new UnexpectedTokenException("expressions or }", currentToken);
+            return new ArrayList<>();
+        Instruction instruction;
+        ArrayList<Instruction> instructions = new ArrayList<>();
+        while((instruction = tryBuildInstruction()) != null)
+            instructions.add(instruction);
         if (getNextToken().getTokenType() == TokenType.CLOSE_CURLY_BRACKET)
-            return body;
+            return instructions;
         throw new UnexpectedTokenException("}", currentToken);
     }
 
-    // FuncDeclaration = ReturnType, Identifier, ‘(‘, [ArgDeclaration, {‘,’, ArgDeclaration },], ‘)’, ‘{‘, { Body },  ‘}’;
     public FunctionDeclaration tryBuildFunctionDeclaration() throws Exception {
         Token startToken = currentToken;
-        if (!isReturnType())
+        Object returnType = tryBuildReturnType();
+        if (returnType == null)
             return null;
         Identifier identifier = tryBuildIdentifier();
         if (identifier == null)
@@ -593,18 +751,11 @@ public class Parser {
         if (currentToken.getTokenType() != TokenType.OPEN_ROUND_BRACKET)
             throw new UnexpectedTokenException("(", currentToken);
         if (getNextToken().getTokenType() == TokenType.CLOSE_ROUND_BRACKET) {
-            Body body = tryBuildFunctionDeclarationBody();
-            return new FunctionDeclaration(startToken.getValue(), null, body, currentToken.getTokenPosition());
+            ArrayList<Instruction> instructions = tryBuildFunctionDeclarationBody();
+            return new FunctionDeclaration(returnType, identifier, new ArrayList<>(), instructions, currentToken.getTokenPosition());
         }
         ArrayList<ArgumentDeclaration> argumentDeclarations = tryBuildFunctionDeclarationArguments();
-        Body body = tryBuildFunctionDeclarationBody();
-        return new FunctionDeclaration(startToken.getValue(), argumentDeclarations, body, currentToken.getTokenPosition());
-    }
-
-    public ArgumentDeclaration tryBuildArgumentDeclaration() {
-        return null;
-    }
-
-    private void parseToken () {
+        ArrayList<Instruction> instructions = tryBuildFunctionDeclarationBody();
+        return new FunctionDeclaration(returnType, identifier, argumentDeclarations, instructions, currentToken.getTokenPosition());
     }
 }

@@ -1,4 +1,4 @@
-package parser.basic;
+package parser.expression;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,7 +6,7 @@ import scanner.token.TokenPosition;
 
 @Getter
 @AllArgsConstructor
-public class Number {
-    private int value;
+public class ReturnExpression {
+    private Object returnValue;
     private TokenPosition tokenPosition;
 }

@@ -2,7 +2,6 @@ package parser.currency;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import parser.currency.CurrencyAbbreviation;
 import scanner.token.TokenPosition;
 
 import java.util.Optional;

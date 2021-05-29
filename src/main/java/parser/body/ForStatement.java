@@ -2,14 +2,14 @@ package parser.body;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import parser.Body;
-import parser.basic.Identifier;
+import parser.Instruction;
 import parser.expression.ForExpression;
 
-//ForStatement = ‘for’, ‘(‘, ForExpression, ‘)’ ‘{‘, { Body }, ‘}’
+import java.util.ArrayList;
+
 @Getter
 @AllArgsConstructor
 public class ForStatement {
     private ForExpression forExpression;
-    private Body body;
+    private ArrayList<Instruction> instructions;
 }

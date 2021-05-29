@@ -7,14 +7,13 @@ import parser.type.Type;
 import scanner.token.TokenPosition;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 @Getter
 @AllArgsConstructor
 public class FunctionDeclaration {
-    private Type returnType;
+    private Object returnType;
     private Identifier functionName;
-    private Optional<ArrayList<ArgumentDeclaration>> arguments;
-    private Optional<Body> body;
+    private ArrayList<ArgumentDeclaration> arguments;
+    private ArrayList<Instruction> instructions;
     private TokenPosition tokenPosition;
 }
