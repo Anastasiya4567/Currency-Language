@@ -1,8 +1,9 @@
-package scanner;
+package main;
 
 import interpreter.Interpreter;
 import parser.Parser;
 import parser.Program;
+import scanner.Scanner;
 
 import java.io.*;
 
@@ -12,7 +13,7 @@ public class Main {
         FileReader fileReader;
 
         try {
-            fileReader = new FileReader("src/main/java/scanner/CProgram.txt");
+            fileReader = new FileReader("src/main/java/main/CProgram.txt");
 
             Scanner scanner = new Scanner(fileReader);
             Parser parser = new Parser(scanner);

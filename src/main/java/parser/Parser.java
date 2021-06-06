@@ -44,7 +44,8 @@ public class Parser {
         return this.currentToken;
     }
 
-    public boolean tryBuildImportOrFunctionDeclaration(List<Import> imports, List<FunctionDeclaration> functionDeclarations) throws Exception {
+    public boolean tryBuildImportOrFunctionDeclaration(List<Import> imports,
+                                                       List<FunctionDeclaration> functionDeclarations) throws Exception {
         Import _import = tryBuildImport();
         if (_import != null) {
             imports.add(_import);
@@ -421,6 +422,8 @@ public class Parser {
         ArrayList<Object> arguments = new ArrayList<>();
         while (currentToken.getTokenType() != TokenType.CLOSE_ROUND_BRACKET) {
             getNextToken();
+            if(currentToken.getTokenType() == TokenType.CLOSE_ROUND_BRACKET)
+                break;
             VariableValueArray variableValueArray = tryBuildVariableValueArray();
             if (variableValueArray != null)
                 arguments.add(variableValueArray);
@@ -652,8 +655,10 @@ public class Parser {
     private ArrayList<Instruction> tryBuildFunctionDeclarationBody() throws Exception {
         if (getNextToken().getTokenType() != TokenType.OPEN_CURLY_BRACKET)
             throw new UnexpectedTokenException("{", currentToken);
-        if (getNextToken().getTokenType() == TokenType.CLOSE_CURLY_BRACKET)
+        if (getNextToken().getTokenType() == TokenType.CLOSE_CURLY_BRACKET) {
+            getNextToken();
             return new ArrayList<>();
+        }
         Instruction instruction;
         ArrayList<Instruction> instructions = new ArrayList<>();
         while((instruction = tryBuildInstruction()) != null)

@@ -239,7 +239,7 @@ public class Scanner implements IScanner {
                         throw new BadTokenSyntaxException("The length of quotation can't be so large", currentLine, currentColumn);
                 }
                 else {
-                    this.currentToken = new Token(TokenType.CONST_STRING, "\"" + quotation.toString() + "\"",
+                    this.currentToken = new Token(TokenType.CONST_STRING, quotation.toString(),
                             new TokenPosition(currentLine, currentColumn));
                     getNextCharacter();
                     return true;

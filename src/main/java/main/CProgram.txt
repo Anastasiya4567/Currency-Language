@@ -1,0 +1,27 @@
+int k () {
+
+}
+
+int main() {/*example comment*/
+    k ();
+    print(1+6/3-1, 3/5);
+	Currency dol = USD(8);
+	Currency eu = USD(2EUR);
+	Currency sum = dol + eu;
+	Currency[] currencies = {2PLN, 1USD, 3USD};
+
+	for(int i = 0; i<3; i=i+1;) {
+		if (getCurrency(currencies[i]) != "EUR") {
+			currencies[i] = exchange(currencies[i], 1.13);
+		}
+		print(currencies[i], ", ");
+	}
+	return 0;
+}
+
+
+/*import "currencies.json";*/
+
+Currency exchange(Currency currency, BigDecimal rate) {
+	return currency*rate;
+}
