@@ -1,14 +1,16 @@
-package parser;
+package parser.instruction;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import parser.basic.Identifier;
 import scanner.token.TokenPosition;
 
 import java.util.ArrayList;
 
 @Getter
 @AllArgsConstructor
-public class VariableValueArray {
-    private ArrayList<Object> values;
+public class FunctionCall {
+    private Identifier name;
+    private ArrayList<Object> arguments;
     private TokenPosition tokenPosition;
 }

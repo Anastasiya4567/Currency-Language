@@ -3,7 +3,6 @@ package parser;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import parser.basic.Identifier;
-import parser.type.Type;
 import scanner.token.TokenPosition;
 
 import java.util.ArrayList;

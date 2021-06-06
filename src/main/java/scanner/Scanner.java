@@ -44,20 +44,20 @@ public class Scanner implements IScanner {
     }
 
     private void buildMapOfKeyWords() {
-        tokens.put("true", TokenType.BOOLEAN_VALUE);
-        tokens.put("false", TokenType.BOOLEAN_VALUE);
-        tokens.put("import", TokenType.IMPORT);
-        tokens.put("return", TokenType.RETURN);
-        tokens.put("if", TokenType.IF);
-        tokens.put("else", TokenType.ELSE);
-        tokens.put("for", TokenType.FOR);
-        tokens.put("int", TokenType.INT);
-        tokens.put("boolean", TokenType.BOOLEAN);
-        tokens.put("BigDecimal", TokenType.BIG_DECIMAL);
-        tokens.put("String", TokenType.STRING);
-        tokens.put("Currency", TokenType.CURRENCY);
-        tokens.put("void", TokenType.VOID);
-        tokens.put("main", TokenType.MAIN_FUNCTION);
+        keyWords.put("true", TokenType.BOOLEAN_VALUE);
+        keyWords.put("false", TokenType.BOOLEAN_VALUE);
+        keyWords.put("import", TokenType.IMPORT);
+        keyWords.put("return", TokenType.RETURN);
+        keyWords.put("if", TokenType.IF);
+        keyWords.put("else", TokenType.ELSE);
+        keyWords.put("for", TokenType.FOR);
+        keyWords.put("int", TokenType.INT);
+        keyWords.put("boolean", TokenType.BOOLEAN);
+        keyWords.put("BigDecimal", TokenType.BIG_DECIMAL);
+        keyWords.put("String", TokenType.STRING);
+        keyWords.put("Currency", TokenType.CURRENCY);
+        keyWords.put("void", TokenType.VOID);
+        //keyWords.put("main", TokenType.MAIN_FUNCTION);
     }
 
     public Scanner(Reader fileReader) throws Exception {
@@ -263,10 +263,11 @@ public class Scanner implements IScanner {
         switch ((char) this.character) {
             case '<' -> {
                 getNextCharacter();
-                if ((char) this.character == '=')
+                if ((char) this.character == '=') {
                     this.currentToken = new Token(TokenType.LESS_OR_EQUALS, "<=",
                             new TokenPosition(currentLine, currentColumn));
-                else {
+                    getNextCharacter();
+                } else {
                     this.currentToken = new Token(TokenType.LESS_THAN, "<",
                             new TokenPosition(currentLine, currentColumn));
                     return;
@@ -274,10 +275,11 @@ public class Scanner implements IScanner {
             }
             case '>' -> {
                 getNextCharacter();
-                if ((char) this.character == '=')
+                if ((char) this.character == '=') {
                     this.currentToken = new Token(TokenType.MORE_OR_EQUALS, ">=",
                             new TokenPosition(currentLine, currentColumn));
-                else {
+                    getNextCharacter();
+                } else {
                     this.currentToken = new Token(TokenType.MORE_THAN, ">",
                             new TokenPosition(currentLine, currentColumn));
                     return;
@@ -285,10 +287,11 @@ public class Scanner implements IScanner {
             }
             case '=' -> {
                 getNextCharacter();
-                if ((char) this.character == '=')
+                if ((char) this.character == '=') {
                     this.currentToken = new Token(TokenType.EQUALS, "==",
                             new TokenPosition(currentLine, currentColumn));
-                else {
+                    getNextCharacter();
+                } else {
                     this.currentToken = new Token(TokenType.ASSIGN, "=",
                             new TokenPosition(currentLine, currentColumn));
                     return;
@@ -296,10 +299,11 @@ public class Scanner implements IScanner {
             }
             case '!' -> {
                 getNextCharacter();
-                if ((char) this.character == '=')
+                if ((char) this.character == '=') {
                     this.currentToken = new Token(TokenType.NOT_EQUALS, "!=",
                             new TokenPosition(currentLine, currentColumn));
-                else {
+                    getNextCharacter();
+                }else {
                     this.currentToken = new Token(TokenType.EXCLAMATION_MARK, "!",
                             new TokenPosition(currentLine, currentColumn));
                     return;
@@ -335,9 +339,10 @@ public class Scanner implements IScanner {
             if (tokens.containsKey(Character.toString(this.character))) {
                 this.currentToken = new Token(tokens.get(Character.toString(this.character)),
                         Character.toString(this.character), new TokenPosition(currentLine, currentColumn));
-            } else
+                getNextCharacter();
+            }
+            else
                 this.matchComparison(currentLine, currentColumn);
-            getNextCharacter();
         }
         catch (Exception e) { throw e; }
     }

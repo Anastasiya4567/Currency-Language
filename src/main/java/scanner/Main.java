@@ -1,6 +1,8 @@
 package scanner;
 
+import interpreter.Interpreter;
 import parser.Parser;
+import parser.Program;
 
 import java.io.*;
 
@@ -14,7 +16,9 @@ public class Main {
 
             Scanner scanner = new Scanner(fileReader);
             Parser parser = new Parser(scanner);
-            parser.parse();
+            Program program = parser.parse();
+            Interpreter interpreter = new Interpreter(program);
+            interpreter.interpret();
 
         } catch (FileNotFoundException er) {
             System.out.println("No such file found");

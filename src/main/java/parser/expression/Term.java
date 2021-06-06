@@ -7,26 +7,26 @@ import scanner.token.TokenPosition;
 import java.util.Optional;
 
 @Getter
-public class Expression {
-    private Term term;
+public class Term {
+    private Factor factor;
     private Optional<Operator> operator;
-    private Optional<Expression> expression;
+    private Optional<Term> term;
     private TokenPosition tokenPosition;
 
-    public Expression (Term term, TokenPosition tokenPosition) {
-        this.term = term;
+    public Term (Factor factor, TokenPosition tokenPosition) {
+        this.factor = factor;
         this.tokenPosition = tokenPosition;
     }
 
-    public Expression (Term term, Optional<Operator> operator, Optional<Expression> expression, TokenPosition tokenPosition) {
-        this.term = term;
+    public Term (Factor factor, Optional<Operator> operator, Optional<Term> term, TokenPosition tokenPosition) {
+        this.factor = factor;
         this.operator = operator;
-        this.expression = expression;
+        this.term = term;
         this.tokenPosition = tokenPosition;
     }
 
     public enum Operator {
-        PLUS,
-        MINUS
+        MULTIPLY,
+        DIVIDE
     }
 }

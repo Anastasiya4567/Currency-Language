@@ -2,12 +2,13 @@ package parser.expression;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import parser.body.VariableDeclaration;
+import parser.instruction.VariableDeclaration;
+import parser.instruction.VariableDefinition;
 
 @Getter
 @AllArgsConstructor
 public class ForExpression {
     private VariableDeclaration variableDeclaration;
     private Object complexExpression;
-    private Expression expression;
+    private VariableDefinition variableDefinition;
 }

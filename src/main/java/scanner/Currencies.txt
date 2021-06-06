@@ -1,13 +1,20 @@
-Currencies: {
-	"USD": { 
-		"symbol": "$",
-		"long_name": "American Dollar",
-		"Value": "1" 
-	},
-	"EUR": { 
-		"symbol": "3", 
-		"long_name":"European Euro",
-		"Value": "1.2USD" 
-	}
-
-}
+[
+    	{
+    	    "abbreviation": "USD",
+    		"symbol": "$",
+    		"longName": "American Dollar",
+    		"value": "1"
+    	},
+    	{
+    	    "abbreviation": "EUR",
+    		"symbol": "e",
+    		"longName":"European Euro",
+    		"value": "1.2USD"
+    	},
+    	{
+    	    "abbreviation": "PLN",
+    		"symbol": "p",
+    		"longName":"Polski Zloty",
+    		"value": "0.25USD"
+    	}
+    ]

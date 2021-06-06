@@ -1,4 +1,4 @@
-package parser.body;
+package parser.instruction;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

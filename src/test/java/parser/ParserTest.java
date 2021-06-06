@@ -2,9 +2,9 @@ package parser;
 
 import org.junit.jupiter.api.Test;
 import parser.basic.*;
-import parser.body.FunctionCall;
-import parser.body.VariableDeclaration;
-import parser.body.VariableDefinition;
+import parser.instruction.FunctionCall;
+import parser.instruction.VariableDeclaration;
+import parser.instruction.VariableDefinition;
 import parser.currency.CurrencyAbbreviation;
 import parser.currency.CurrencyAssignment;
 import parser.currency.CurrencyConversion;
@@ -116,7 +116,8 @@ public class ParserTest {
 
         assertEquals(simpleType.getType(), "int");
         Expression expression = (Expression) variableDeclaration.getValue();
-        Integer number = (Integer) expression.getValue();
+        VariableValue variableValue = (VariableValue) expression.getTerm().getFactor().getValue();
+        Integer number = (Integer) ((ArgumentValue) variableValue.getValue()).getValue();
         assertEquals(variableDeclaration.getIdentifier().getValue(), "i");
         assertEquals(number, 4);
     }
@@ -175,10 +176,11 @@ public class ParserTest {
         ScannerMock scanner = new ScannerMock(tokens);
         Parser parser = new Parser(scanner);
 
-        VariableDefinition variableDefinition = parser.tryBuildVariableDefinition(new Identifier("i", new TokenPosition()));
+        VariableDefinition variableDefinition = parser.tryBuildVariableDefinition(parser.tryBuildIdentifier());
 
         Expression expression = (Expression) variableDefinition.getValue();
-        Integer value = (Integer) expression.getValue();
+        VariableValue variableValue = (VariableValue) expression.getTerm().getFactor().getValue();
+        Integer value = (Integer) ((ArgumentValue) variableValue.getValue()).getValue();
         assertEquals(value, 15);
     }
 
@@ -212,18 +214,6 @@ public class ParserTest {
     }
 
     @Test
-    public void buildCurrencyTest() throws Exception {
-        ArrayList<Token> tokens = new ArrayList<>();
-        tokens.add(new Token(TokenType.IDENTIFIER, "EUR"));
-        ScannerMock scanner = new ScannerMock(tokens);
-        Parser parser = new Parser(scanner);
-
-        Currency currency = parser.tryBuildCurrency(new java.math.BigDecimal("12.432"));
-        assertEquals(currency.getValue(), new java.math.BigDecimal("12.432"));
-        assertEquals(currency.getCurrencyAbbreviation().getAbbreviation(), "EUR");
-    }
-
-    @Test
     public void buildCurrencyConversionTest() throws Exception {
         ArrayList<Token> tokens = new ArrayList<>();
         tokens.add(new Token(TokenType.IDENTIFIER, "USD"));
@@ -235,10 +225,15 @@ public class ParserTest {
         Parser parser = new Parser(scanner);
 
         CurrencyConversion currencyConversion = parser.tryBuildCurrencyConversion();
+        Expression expression = currencyConversion.getExpression();
+        ArgumentValue argumentValue = (ArgumentValue) ((VariableValue)expression.getTerm().getFactor().getValue()).getValue();
+        CurrencyAssignment currencyAssignment = (CurrencyAssignment)argumentValue.getValue();
+        BigDecimal content = (BigDecimal) currencyAssignment.getContent();
+        String abbreviation = ((CurrencyAbbreviation) currencyAssignment.getCurrencyAbbreviation()).getAbbreviation();
 
         assertEquals(currencyConversion.getCurrencyAbbreviation().getAbbreviation(), "USD");
-        assertEquals(currencyConversion.getContent(), new BigDecimal(12.25));
-        assertEquals(currencyConversion.getCurrency().get().getAbbreviation(), "EUR");
+        assertEquals(content, new BigDecimal(12.25));
+        assertEquals(abbreviation, "EUR");
     }
 
     @Test
@@ -249,10 +244,12 @@ public class ParserTest {
         ScannerMock scanner = new ScannerMock(tokens);
         Parser parser = new Parser(scanner);
 
-        CurrencyAssignment currencyAssignment = parser.tryBuildCurrencyAssignment();
-
-        assertEquals(currencyAssignment.getContent(), new BigDecimal(612.5));
-        assertEquals(currencyAssignment.getCurrencyAbbreviation().getAbbreviation(), "RUB");
+        ArgumentValue argumentValue = parser.tryBuildArgumentValue();
+        CurrencyAssignment currencyAssignment = (CurrencyAssignment)argumentValue.getValue();
+        BigDecimal content = (BigDecimal) currencyAssignment.getContent();
+        String abbreviation = ((CurrencyAbbreviation) currencyAssignment.getCurrencyAbbreviation()).getAbbreviation();
+        assertEquals(content, new BigDecimal(612.5));
+        assertEquals(abbreviation, "RUB");
     }
 
     @Test
@@ -270,12 +267,16 @@ public class ParserTest {
 
         assertTrue(simpleExpression.isNegated());
 
-        FunctionCall functionCall = (FunctionCall) simpleExpression.getContent();
+        Expression expression = (Expression) simpleExpression.getContent();
+        VariableValue variableValue = (VariableValue) expression.getTerm ().getFactor().getValue();
+        FunctionCall functionCall = (FunctionCall) variableValue.getValue();
         String name = functionCall.getName().getValue();
         assertEquals(name, "isConverted");
 
-        Expression argument = (Expression) functionCall.getArguments().get(0);
-        String argumentName = ((Identifier) argument.getValue()).getValue();
+        Expression argument = (Expression) ((SimpleExpression)functionCall.getArguments().get(0)).getContent();
+        VariableValue variableValue2 = (VariableValue)argument.getTerm().getFactor().getValue();
+        Identifier identifier = (Identifier) variableValue2.getValue();
+        String argumentName = identifier.getValue();
         assertEquals(argumentName, "a");
     }
 
@@ -296,7 +297,9 @@ public class ParserTest {
         assertTrue(leftSimpleExpression.isNegated());
 
         Expression expression = (Expression) leftSimpleExpression.getContent();
-        String value = ((Identifier )expression.getValue()).getValue();
+        VariableValue variableValue = (VariableValue)expression.getTerm().getFactor().getValue();
+        Identifier identifier = (Identifier) variableValue.getValue();
+        String value = identifier.getValue();
 
         assertEquals (value, "a");
         assertEquals(complexExpression.getRelationalOperator(), "<");
@@ -304,7 +307,9 @@ public class ParserTest {
 
         SimpleExpression rightSimpleExpression = complexExpression.getRightSimpleExpression();
         Expression expression2 = (Expression) rightSimpleExpression.getContent();
-        String value2 = ((Identifier )expression2.getValue()).getValue();
+        VariableValue variableValue2 = (VariableValue)expression2.getTerm().getFactor().getValue();
+        Identifier identifier2 = (Identifier) variableValue2.getValue();
+        String value2 = identifier2.getValue();
         assertEquals(value2, "b");
     }
 
@@ -326,7 +331,9 @@ public class ParserTest {
         assertFalse(leftSimpleExpression.isNegated());
 
         Expression expression = (Expression) leftSimpleExpression.getContent();
-        String value = ((Identifier )expression.getValue()).getValue();
+        VariableValue variableValue = (VariableValue)expression.getTerm().getFactor().getValue();
+        Identifier identifier = (Identifier) variableValue.getValue();
+        String value = identifier.getValue();
 
         assertEquals (value, "a");
         assertEquals(complexExpression.getRelationalOperator(), ">=");
@@ -334,13 +341,17 @@ public class ParserTest {
 
         SimpleExpression rightSimpleExpression = complexExpression.getRightSimpleExpression();
         Expression expression2 = (Expression) rightSimpleExpression.getContent();
-        String value2 = ((Identifier )expression2.getValue()).getValue();
+        VariableValue variableValue2 = (VariableValue)expression2.getTerm().getFactor().getValue();
+        Identifier identifier2 = (Identifier) variableValue2.getValue();
+        String value2 = identifier2.getValue();
         assertEquals(value2, "b");
 
         Optional<IfExpression> innerIfExpression = ifExpression.getIfExpression();
         SimpleExpression simpleExpression2 = (SimpleExpression) innerIfExpression.get().getExpression();
         Expression expression3 = (Expression) simpleExpression2.getContent();
-        String value3 = ((Identifier )expression3.getValue()).getValue();
+        VariableValue variableValue3 = (VariableValue)expression3.getTerm().getFactor().getValue();
+        Identifier identifier3 = (Identifier) variableValue3.getValue();
+        String value3 = identifier3.getValue();
         assertEquals(value3, "c");
     }
 
