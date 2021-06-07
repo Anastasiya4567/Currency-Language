@@ -1,4 +1,4 @@
-package scanner;
+package scanner.token;
 
 public enum TokenType {
     UNDEFINED,
@@ -27,8 +27,21 @@ public enum TokenType {
     MULTIPLY,
     DIVIDE,
     NUMBER,
-    BIG_DECIMAL,
+    BIG_DECIMAL_NUMBER,
     AND,
     OR,
-    COMMENT
+    COMMENT,
+    BOOLEAN_VALUE,
+    IMPORT,
+    RETURN,
+    IF,
+    ELSE,
+    FOR,
+    INT,
+    BOOLEAN,
+    BIG_DECIMAL,
+    STRING,
+    CURRENCY,
+    VOID,
+    MAIN_FUNCTION
 }

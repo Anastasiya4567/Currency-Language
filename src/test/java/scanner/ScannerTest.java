@@ -1,6 +1,8 @@
 package scanner;
 
 import org.junit.jupiter.api.Test;
+import scanner.token.Token;
+import scanner.token.TokenType;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -175,13 +177,14 @@ public class ScannerTest {
         String testString = "a &( d";
         StringReader stringReader = new StringReader(testString);
         ArrayList<Token> tokens = new ArrayList<>();
-        try {
+
+        Exception exception = assertThrows(Exception.class, () -> {
             scan(stringReader, tokens);
-        } catch (Exception e) {
-            String expectedMessage = "Expected && but got &( ";
-            String actualMessage = e.getMessage();
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        });
+
+        String expectedMessage = "Expected && but got &( ";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test
@@ -200,13 +203,14 @@ public class ScannerTest {
         String testString = "a | d";
         StringReader stringReader = new StringReader(testString);
         ArrayList<Token> tokens = new ArrayList<>();
-        try {
+
+        Exception exception = assertThrows(Exception.class, () -> {
             scan(stringReader, tokens);
-        } catch (Exception e) {
-            String expectedMessage = "Expected || but got | ";
-            String actualMessage = e.getMessage();
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        });
+
+        String expectedMessage = "Expected || but got | ";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test
@@ -227,13 +231,14 @@ public class ScannerTest {
         testString.append("aB".repeat(150));
         StringReader stringReader = new StringReader(testString.toString());
         ArrayList<Token> tokens = new ArrayList<>();
-        try {
+
+        Exception exception = assertThrows(Exception.class, () -> {
             scan(stringReader, tokens);
-        } catch (Exception e) {
-            String expectedMessage = "The length of identifier can't be so large";
-            String actualMessage = e.getMessage();
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        });
+
+        String expectedMessage = "The length of identifier can't be so large";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test
@@ -254,9 +259,9 @@ public class ScannerTest {
         ArrayList<Token> tokens = new ArrayList<>();
         scan(stringReader, tokens);
 
-        assertEquals(TokenType.BIG_DECIMAL, tokens.get(3).getTokenType());
+        assertEquals(TokenType.BIG_DECIMAL_NUMBER, tokens.get(3).getTokenType());
         assertEquals(tokens.get(3).getValue(),"213.231");
-        assertEquals(TokenType.BIG_DECIMAL, tokens.get(5).getTokenType());
+        assertEquals(TokenType.BIG_DECIMAL_NUMBER, tokens.get(5).getTokenType());
         assertEquals(tokens.get(5).getValue(),"0.11");
 
     }
@@ -268,13 +273,15 @@ public class ScannerTest {
         for (int i=0; i<3; i++){
             StringReader stringReader = new StringReader(testString[i]);
             ArrayList<Token> tokens = new ArrayList<>();
-            try {
+
+            Exception exception = assertThrows(Exception.class, () -> {
                 scan(stringReader, tokens);
-            } catch (Exception e) {
-                String expectedMessage = "Bad format of number";
-                String actualMessage = e.getMessage();
-                assertTrue(actualMessage.contains(expectedMessage));
-            }
+            });
+
+            String expectedMessage = "Bad format of number";
+            String actualMessage = exception.getMessage();
+            assertTrue(actualMessage.contains(expectedMessage));
+
         }
     }
 
@@ -284,13 +291,13 @@ public class ScannerTest {
         StringReader stringReader = new StringReader(testString);
         ArrayList<Token> tokens = new ArrayList<>();
 
-        try {
+        Exception exception = assertThrows(Exception.class, () -> {
             scan(stringReader, tokens);
-        } catch (Exception e) {
-            String expectedMessage = "The length of number can't be so large";
-            String actualMessage = e.getMessage();
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        });
+
+        String expectedMessage = "The length of number can't be so large";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test
@@ -310,13 +317,13 @@ public class ScannerTest {
         StringReader stringReader = new StringReader(testString);
         ArrayList<Token> tokens = new ArrayList<>();
 
-        try {
+        Exception exception = assertThrows(Exception.class, () -> {
             scan(stringReader, tokens);
-        } catch (Exception e) {
-            String expectedMessage = "Unclosed comment";
-            String actualMessage = e.getMessage();
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        });
+
+        String expectedMessage = "Unclosed comment";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test
@@ -326,13 +333,14 @@ public class ScannerTest {
 
         StringReader stringReader = new StringReader(spaces.toString());
         ArrayList<Token> tokens = new ArrayList<>();
-        try {
+
+        Exception exception = assertThrows(Exception.class, () -> {
             scan(stringReader, tokens);
-        } catch (Exception e) {
-            String expectedMessage = "The number of spaces can't be so large";
-            String actualMessage = e.getMessage();
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        });
+
+        String expectedMessage = "The number of spaces can't be so large";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test
@@ -349,15 +357,18 @@ public class ScannerTest {
     @Test
     public void constStringExceptionTest() {
         String testString = "\"this is a string literal";
-        StringReader stringReader = new StringReader(testString);
+
+        StringReader stringReader = new StringReader(testString.toString());
         ArrayList<Token> tokens = new ArrayList<>();
-        try {
+
+        Exception exception = assertThrows(Exception.class, () -> {
             scan(stringReader, tokens);
-        } catch (Exception e) {
-            String expectedMessage = "Unclosed string literal";
-            String actualMessage = e.getMessage();
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        });
+
+        String expectedMessage = "Unclosed string literal";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
+
     }
 
     @Test
@@ -368,13 +379,14 @@ public class ScannerTest {
 
         StringReader stringReader = new StringReader(testString.toString());
         ArrayList<Token> tokens = new ArrayList<>();
-        try {
+
+        Exception exception = assertThrows(Exception.class, () -> {
             scan(stringReader, tokens);
-        } catch (Exception e) {
-            String expectedMessage = "The length of quotation can't be so large";
-            String actualMessage = e.getMessage();
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        });
+
+        String expectedMessage = "The length of quotation can't be so large";
+        String actualMessage = exception.getMessage();
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     //undefined token type
