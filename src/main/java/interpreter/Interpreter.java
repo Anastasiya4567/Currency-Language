@@ -62,11 +62,11 @@ public class Interpreter {
         localVariables.put(name, new Pair<>(type, variable));
     }
 
-    public Pair<Type, Object> getVariableValue(ArrayList<Map<String, Pair<Type, Object>>> localVariables, String name) throws Exception {
+    public Object getVariableValue(ArrayList<Map<String, Pair<Type, Object>>> localVariables, String name) throws Exception {
         for(int i = localVariables.size()-1; i >= 0; --i) {
             Map<String, Pair<Type, Object>> localScope = localVariables.get(i);
             if(localScope.containsKey(name))
-                return localScope.get(name);
+                return localScope.get(name).second;
         }
         throw new Exception(); //unknown variable
     }
@@ -330,7 +330,7 @@ public class Interpreter {
                 for(int i = 0; i < arguments.size(); ++i) {
                     Pair<String, Integer> type1 = getObjectType(arguments.get(i));
                     Pair<String, Integer> type2 = evaluateType(functionDeclaration.getArguments().get(i).getType());
-                    if(type1 != type2)
+                    if(!type1.equals(type2))
                         throw new Exception("type mismatch");
                 }
                 return interpretFunction(functionDeclaration, arguments);
@@ -351,6 +351,8 @@ public class Interpreter {
             return interpretFunctionCall(localVariables, (FunctionCall) variableValue.getValue());
         } else if (variableValue.getValue() instanceof ArgumentValue) {
             return evaluateArgumentValue(localVariables, (ArgumentValue) variableValue.getValue());
+        } else if (variableValue.getValue() instanceof Identifier) {
+            return getVariableValue(localVariables, ((Identifier)variableValue.getValue()).getValue());
         }
         throw new Exception();
     }
@@ -468,11 +470,24 @@ public class Interpreter {
     public Object interpretFunction(FunctionDeclaration functionDeclaration, List<Object> arguments) throws Exception {
         ArrayList<Map<String, Pair<Type, Object>>> localVariables = new ArrayList<>();
         localVariables.add(new HashMap<>());
+        ArrayList<ArgumentDeclaration> argumentValues = functionDeclaration.getArguments();
+        for(int i = 0; i < arguments.size(); ++i) {
+            declareNewVariable(localVariables.get(0),arguments.get(i), argumentValues.get(i).getIdentifier().getValue(), argumentValues.get(i).getType());
+        }
         for (Instruction instruction : functionDeclaration.getInstructions()) {
             interpretInstruction(localVariables, instruction);
         }
+        if(functionDeclaration.getInstructions().size()>0) {
+            Instruction instruction = functionDeclaration.getInstructions().get(functionDeclaration.getInstructions().size()-1);
+            if(instruction.getBody() instanceof ReturnExpression) {
+                ReturnExpression returnExpression = (ReturnExpression)instruction.getBody();
+                return evaluateVariableValueArrayOrExpression(localVariables, null, returnExpression.getReturnValue());
+            }
+        }
         return null;
     }
+
+
 
     public void interpretInstruction (ArrayList<Map<String, Pair<Type, Object>>> localVariables,
                                       Instruction instruction) throws Exception {
@@ -493,7 +508,7 @@ public class Interpreter {
             Object variable = new Pair<>(type, null);
             if(object != null)
                 variable = evaluateVariableValueArrayOrExpression(localVariables, type, object);
-            declareNewVariable(localVariables.get(0), variable, name.getValue(), type);
+            declareNewVariable(localVariables.get(localVariables.size()-1), variable, name.getValue(), type);
         } else if (instruction.getBody() instanceof FunctionCall) {
             interpretFunctionCall(localVariables, (FunctionCall)instruction.getBody());
         } else if (instruction.getBody() instanceof VariableDefinition) {
